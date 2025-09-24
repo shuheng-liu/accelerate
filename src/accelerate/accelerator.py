@@ -188,6 +188,9 @@ class Accelerator:
         device_placement (`bool`, *optional*, defaults to `True`):
             Whether or not the accelerator should put objects on device (tensors yielded by the dataloader, model,
             etc...).
+        split_batches (bool, *optional*):
+            Whether to split each batch across processes (True) or to have each process receive a full batch (False).
+            If not provided, falls back to the value configured in DataLoaderConfiguration.
         mixed_precision (`str`, *optional*):
             Whether or not to use mixed precision training. Choose from 'no','fp16','bf16' or 'fp8'. Will default to
             the value in the environment variable `ACCELERATE_MIXED_PRECISION`, which will use the default value in the
@@ -555,6 +558,9 @@ class Accelerator:
         self.device_placement = device_placement
         if dataloader_config is None:
             dataloader_config = DataLoaderConfiguration()
+        # Honor the `split_batches` constructor argument if explicitly passed
+        if split_batches is not _split_batches:
+            dataloader_config.split_batches = bool(split_batches)
         self.dataloader_config = dataloader_config
         self.step_scheduler_with_optimizer = step_scheduler_with_optimizer
 
