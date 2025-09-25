@@ -861,3 +861,46 @@ class AcceleratorTester(AccelerateTestCase):
             #       weight is on the meta device, we need a `value` to put in on 0
             x = torch.randn(1, 2)
             my_model(x)
+
+    def test_split_batches_constructor_default_does_not_override(self):
+        """If split_batches is not explicitly passed, keep the config's value."""
+        cfg = DataLoaderConfiguration(split_batches=False)
+        acc = Accelerator(dataloader_config=cfg)
+        # Prefer Accelerator attribute if available, otherwise check config directly
+        if hasattr(acc, "split_batches"):
+            assert acc.split_batches is False
+        assert acc.dataloader_config is cfg
+        assert acc.dataloader_config.split_batches is False
+
+    def test_split_batches_constructor_override_true(self):
+        """If split_batches=True is passed, it overrides the config (legacy arg honored)."""
+        cfg = DataLoaderConfiguration(split_batches=False)
+        acc = Accelerator(dataloader_config=cfg, split_batches=True)
+        if hasattr(acc, "split_batches"):
+            assert acc.split_batches is True
+        assert acc.dataloader_config is cfg
+        assert acc.dataloader_config.split_batches is True
+
+    def test_split_batches_constructor_override_false(self):
+        """If split_batches=False is passed, it overrides the config (legacy arg honored)."""
+        cfg = DataLoaderConfiguration(split_batches=True)
+        acc = Accelerator(dataloader_config=cfg, split_batches=False)
+        if hasattr(acc, "split_batches"):
+            assert acc.split_batches is False
+        assert acc.dataloader_config is cfg
+        assert acc.dataloader_config.split_batches is False
+
+    def test_split_batches_constructor_with_none_cfg_true(self):
+        """When no dataloader_config is provided, passing split_batches=True is applied."""
+        acc = Accelerator(split_batches=True)
+        if hasattr(acc, "split_batches"):
+            assert acc.split_batches is True
+        assert acc.dataloader_config.split_batches is True
+
+    def test_split_batches_constructor_with_none_cfg_false(self):
+        """When no dataloader_config is provided, passing split_batches=False is applied."""
+        acc = Accelerator(split_batches=False)
+        if hasattr(acc, "split_batches"):
+            assert acc.split_batches is False
+        assert acc.dataloader_config.split_batches is False
+
